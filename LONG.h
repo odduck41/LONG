@@ -22,11 +22,11 @@ public:
     //void to_(int);
     LONG operator+ (LONG) const;
     LONG operator* (const LONG&) const;
-    LONG operator^ (int) const;
+    LONG operator^ (long long) const;
     bool operator<(LONG) const;
     bool operator>(LONG) const;
     bool operator==(const LONG&) const;
-    LONG operator/ (LONG) const;
+    LONG operator/ (const LONG&) const;
     LONG to_10() const;
 private:
     std::vector<unsigned char> Integer_;

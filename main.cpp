@@ -3,10 +3,6 @@
 
 
 int main() {
-    std::string first;
-    std::string second;
-    std::cin >> first >> second;
-    LONG a(first);
-    LONG b(second);
-    std::cout << (a / b);
+    LONG a("1.1", 2);
+    std::cout << a.to_10();
 }

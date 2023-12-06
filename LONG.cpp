@@ -212,7 +212,7 @@ LONG LONG::operator* (const LONG& other) const {
     return ans;
 }
 
-LONG LONG::operator^ (int n) const {
+LONG LONG::operator^ (long long n) const {
     LONG ans("1");
     for (int i = 0; i < n; ++i) {
         ans = ans * (*this);
@@ -227,16 +227,20 @@ bool LONG::operator==(const LONG& other) const {
 bool LONG::operator>(LONG other) const{
     auto th = this->Integer_;
     auto oth = other.Integer_;
-    std::reverse(th.begin(), th.end());
-    std::reverse(oth.begin(), oth.end());
-    std::stringstream ths, oths;
-    for (auto &t: th) {
-        ths << t;
+    if (th.size() > oth.size()) {
+        return true;
+    } else if (th.size() < oth.size()) {
+        return false;
+    } else {
+        for (int i = th.size() - 1; i >= 0; --i) {
+            if (th[i] > oth[i]) {
+                return true;
+            } else if (th[i] < oth[i]) {
+                return false;
+            }
+        }
     }
-    for (auto &o: oth) {
-        oths << o;
-    }
-    return ths.str() > oths.str();
+    return false;
 }
 
 bool LONG::operator<(LONG oth) const {
@@ -246,25 +250,25 @@ bool LONG::operator<(LONG oth) const {
 LONG LONG::to_10() const{
     LONG ans;
     ans.Base_ = 10;
-
+    for (long long i = 0; i < this->Integer_.size(); ++i) {
+        ans = ans + LONG(std::to_string(this->Integer_[i])) * (LONG(std::to_string(Base_)) ^ i);
+    }
+    LONG k;
+    k.Integer_ = this->PrePeriod_;
+    for (long long i = 0; i < this->PrePeriod_.size(); ++i) {
+        auto val = (LONG(std::to_string(k.Integer_[i], 2))/(LONG(std::to_string(this->Base_)) ^ (-1-i)));
+        //ans.PrePeriod_.push_back(val);
+    }
+    return ans;
 }
 
 
-LONG LONG::operator/ (LONG other) const {
-    LONG l("0", this->Base_);
-    LONG r;
-    r.Integer_ = this->Integer_;
-    r = r + LONG("1", this->Base_);
-    r.Base_ = Base_;
-    while (l + LONG("1", this->Base_) < r) {
-        auto DoubledMid = l + r;
-        if (DoubledMid * other > *this * LONG("2", this->Base_) || DoubledMid * other == *this * LONG("2", this->Base_)) {
-            l = DoubledMid;
-        } else {
-            r = DoubledMid;
-        }
+LONG LONG::operator/ (const LONG& other) const {
+    LONG ans("0", this->Base_);
+    for (;(ans * other) < *this;) {
+            ans = ans + LONG("1", this->Base_);
     }
-    return l;
+    return ans;
 }
 
 std::string operator* (const std::string& s, int n) {
