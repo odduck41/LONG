@@ -92,30 +92,54 @@ void LONG::Parse(const std::string& Val) {
 LONG LONG::operator+ (LONG other) const {
     LONG sum;
     sum.Integer_.resize(std::max(other.Integer_.size(), this->Integer_.size()));
+    sum.PrePeriod_.resize(std::max(other.PrePeriod_.size(), this->PrePeriod_.size()));
     sum.Base_ = this->Base_;
     int carry = 0;
+    auto bvo = other.Period_;
+    auto nvo = this->Period_;
+    auto nvp = this->PrePeriod_;
     //Pre PrePeriod part
-
+    while (this->PrePeriod_.size() > other.PrePeriod_.size()) {
+        if (!other.Period_.empty()) {
+            other.PrePeriod_.push_back(other.Period_[0]);
+            auto tmp = other.Period_[0];
+            other.Period_.erase(other.Period_.begin(), other.Period_.begin()+1);
+            other.Period_.push_back(tmp);
+        } else {
+            other.Period_.push_back(0);
+        }
+    }
+    while (nvp.size() < other.Period_.size()) {
+        if (!other.Period_.empty()) {
+            nvp.push_back(nvo[0]);
+            auto tmp = nvo[0];
+            nvo.erase(nvo.begin(), nvo.begin()+1);
+            nvo.push_back(tmp);
+        } else {
+            nvp.push_back(0);
+        }
+    }
     //Period part
-    if (this->PrePeriod_.size() == other.PrePeriod_.size()) {
-        sum.Period_.resize(lcd(this->Period_.size(), other.Period_.size()));
-        auto bvo = other.Period_;
-        auto nvo = this->Period_;
-        for (auto i = lcd(this->Period_.size(), other.Period_.size()) / other.Period_.size(); i > 0; --i) {
-            for (auto &j: bvo) {
-                other.Period_.push_back(j);
-            }
+    sum.Period_.resize(lcd(this->Period_.size(), other.Period_.size()));
+    for (auto i = lcd(this->Period_.size(), other.Period_.size()) / other.Period_.size(); i > 0; --i) {
+        for (auto &j: bvo) {
+            other.Period_.push_back(j);
         }
-        for (auto i = lcd(this->Period_.size(), other.Period_.size()) / this->Period_.size(); i > 0; --i) {
-            for (auto &j: this->Period_) {
-                nvo.push_back(j);
-            }
+    }
+    for (auto i = lcd(this->Period_.size(), other.Period_.size()) / this->Period_.size(); i > 0; --i) {
+        for (auto &j: this->Period_) {
+            nvo.push_back(j);
         }
-        for (long long i = sum.Period_.size() - 1; i >= 0; --i) {
-            sum.Period_[i] = ((int) nvo[i] + (int) other.Period_[i] + carry) % Base_;
-            carry = ((int) nvo[i] + (int) other.Period_[i] + carry) / Base_;
-        }
-        sum.Period_[sum.Period_.size() - 1] += carry;
+    }
+    for (long long i = sum.Period_.size() - 1; i >= 0; --i) {
+        sum.Period_[i] = ((int) nvo[i] + (int) other.Period_[i] + carry) % Base_;
+        carry = ((int) nvo[i] + (int) other.Period_[i] + carry) / Base_;
+    }
+    sum.Period_[sum.Period_.size() - 1] += carry;
+    //PrePeriod part
+    for (long long i = sum.PrePeriod_.size() - 1; i >= 0; --i) {
+        sum.PrePeriod_[i] = ((int) nvp[i] + (int) other.PrePeriod_[i] + carry) % Base_;
+        carry = ((int) nvp[i] + (int) other.PrePeriod_[i] + carry) / Base_;
     }
     // Int part
     for (int i = 0; i < std::max(other.Integer_.size(), this->Integer_.size()); ++i) {
