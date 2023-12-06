@@ -181,7 +181,7 @@ LONG LONG::operator+ (LONG other) const {
     return sum;
 }
 
-LONG LONG::operator* (LONG other) const { //1000000000000000000 1000000000000000000000
+LONG LONG::operator* (LONG other) const {
     LONG ans;
     auto first = this->Integer_;
     auto second = other.Integer_;
@@ -208,6 +208,14 @@ LONG LONG::operator* (LONG other) const { //1000000000000000000 1000000000000000
             now.Integer_.insert(now.Integer_.begin(), 0);
         }
         ans = ans + now;
+    }
+    return ans;
+}
+
+LONG LONG::operator^ (int n) const {
+    LONG ans("1");
+    for (int i = 0; i < n; ++i) {
+        ans = ans * (*this);
     }
     return ans;
 }
