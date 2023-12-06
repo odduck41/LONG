@@ -1,12 +1,12 @@
 #include <iostream>
 #include "LONG.h"
-#include <sstream>
 
 
 int main() {
     std::string first;
-    int second;
+    std::string second;
     std::cin >> first >> second;
     LONG a(first);
-    std::cout << (a ^ second);
+    LONG b(second);
+    std::cout << (a / b);
 }

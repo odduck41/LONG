@@ -181,7 +181,7 @@ LONG LONG::operator+ (LONG other) const {
     return sum;
 }
 
-LONG LONG::operator* (LONG other) const {
+LONG LONG::operator* (const LONG& other) const {
     LONG ans;
     auto first = this->Integer_;
     auto second = other.Integer_;
@@ -220,6 +220,53 @@ LONG LONG::operator^ (int n) const {
     return ans;
 }
 
+bool LONG::operator==(const LONG& other) const {
+    return other.Integer_ == this->Integer_;
+}
+
+bool LONG::operator>(LONG other) const{
+    auto th = this->Integer_;
+    auto oth = other.Integer_;
+    std::reverse(th.begin(), th.end());
+    std::reverse(oth.begin(), oth.end());
+    std::stringstream ths, oths;
+    for (auto &t: th) {
+        ths << t;
+    }
+    for (auto &o: oth) {
+        oths << o;
+    }
+    return ths.str() > oths.str();
+}
+
+bool LONG::operator<(LONG oth) const {
+    return !(*this == oth) && !(*this > oth);
+}
+
+LONG LONG::to_10() const{
+    LONG ans;
+    ans.Base_ = 10;
+
+}
+
+
+LONG LONG::operator/ (LONG other) const {
+    LONG l("0", this->Base_);
+    LONG r;
+    r.Integer_ = this->Integer_;
+    r = r + LONG("1", this->Base_);
+    r.Base_ = Base_;
+    while (l + LONG("1", this->Base_) < r) {
+        auto DoubledMid = l + r;
+        if (DoubledMid * other > *this * LONG("2", this->Base_) || DoubledMid * other == *this * LONG("2", this->Base_)) {
+            l = DoubledMid;
+        } else {
+            r = DoubledMid;
+        }
+    }
+    return l;
+}
+
 std::string operator* (const std::string& s, int n) {
     std::string ans;
     for (int i = 0; i < n; ++i) {
@@ -236,3 +283,4 @@ LONG::LONG(const std::string& Val, int Base) : Base_(Base) {
         << "Here:   " << (std::string)" " * (a.second) << '^' << '\n';
     }
 }
+

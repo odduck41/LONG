@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 template <class A, class B, class C>
 struct triple {
@@ -20,9 +21,13 @@ public:
     explicit LONG(const std::string&, int = 10);
     //void to_(int);
     LONG operator+ (LONG) const;
-    LONG operator* (LONG) const;
+    LONG operator* (const LONG&) const;
     LONG operator^ (int) const;
+    bool operator<(LONG) const;
+    bool operator>(LONG) const;
+    bool operator==(const LONG&) const;
     LONG operator/ (LONG) const;
+    LONG to_10() const;
 private:
     std::vector<unsigned char> Integer_;
     std::vector<unsigned char> PrePeriod_;
