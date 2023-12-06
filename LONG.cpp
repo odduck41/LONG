@@ -1,5 +1,51 @@
 #include "LONG.h"
 
+unsigned long long gcd(unsigned long long a, unsigned long long b) {
+    return b ? gcd(b, a%b) : a;
+}
+unsigned long long lcd(unsigned long long a, unsigned long long b) {
+    return std::max(a, b)/gcd(a, b) * std::min(a, b);
+}
+
+std::ostream& operator<<(std::ostream& out, LONG th) {
+    for (long long i = th.Integer_.size() - 1; i >= 0; --i) {
+        if ((int)th.Integer_[i] > 9) {
+            out << '[';
+        }
+        out << (int)th.Integer_[i];
+        if ((int)th.Integer_[i] > 9) {
+            out << ']';
+        }
+    }
+    if (!th.PrePeriod_.empty() || !th.Period_.empty()) {
+        out << '.';
+    }
+    for (auto &i: th.PrePeriod_) {
+        if (i > 9) {
+            out << '[';
+        }
+        out << (int)i;
+        if (i > 9) {
+            out << ']';
+        }
+    }
+    if (!th.Period_.empty()) {
+        out << '(';
+    }
+    for (auto &i: th.Period_) {
+        if (i > 9) {
+            out << '[';
+        }
+        out << (int)i;
+        if (i > 9) {
+            out << ']';
+        }
+    }
+    if (!th.Period_.empty()) {
+        out << ')';
+    }
+    return out;
+}
 
 void LONG::Parse(const std::string& Val) {
     bool pre = false;
@@ -43,17 +89,35 @@ void LONG::Parse(const std::string& Val) {
     std::reverse(Integer_.begin(), Integer_.end());
 }
 
-void LONG::to_(int Base) {
-    ;
-}
-
 LONG LONG::operator+ (LONG other) const {
     LONG sum;
-    other.to_(this->Base_);
     sum.Integer_.resize(std::max(other.Integer_.size(), this->Integer_.size()));
     sum.Base_ = this->Base_;
     int carry = 0;
+    //Pre PrePeriod part
 
+    //Period part
+    if (this->PrePeriod_.size() == other.PrePeriod_.size()) {
+        sum.Period_.resize(lcd(this->Period_.size(), other.Period_.size()));
+        auto bvo = other.Period_;
+        auto nvo = this->Period_;
+        for (auto i = lcd(this->Period_.size(), other.Period_.size()) / other.Period_.size(); i > 0; --i) {
+            for (auto &j: bvo) {
+                other.Period_.push_back(j);
+            }
+        }
+        for (auto i = lcd(this->Period_.size(), other.Period_.size()) / this->Period_.size(); i > 0; --i) {
+            for (auto &j: this->Period_) {
+                nvo.push_back(j);
+            }
+        }
+        for (long long i = sum.Period_.size() - 1; i >= 0; --i) {
+            sum.Period_[i] = ((int) nvo[i] + (int) other.Period_[i] + carry) % Base_;
+            carry = ((int) nvo[i] + (int) other.Period_[i] + carry) / Base_;
+        }
+        sum.Period_[sum.Period_.size() - 1] += carry;
+    }
+    // Int part
     for (int i = 0; i < std::max(other.Integer_.size(), this->Integer_.size()); ++i) {
         if (i < other.Integer_.size() && i < this->Integer_.size()) {
             sum.Integer_[i] = ((int)this->Integer_[i] + (int)other.Integer_[i] + carry) % Base_;
@@ -69,8 +133,6 @@ LONG LONG::operator+ (LONG other) const {
             sum.Integer_.push_back(carry);
         }
     }
-
-
     return sum;
 }
 
