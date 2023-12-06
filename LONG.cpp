@@ -109,8 +109,8 @@ LONG LONG::operator+ (LONG other) const {
             other.Period_.push_back(0);
         }
     }
-    while (nvp.size() < other.Period_.size()) {
-        if (!other.Period_.empty()) {
+    while (nvp.size() < other.PrePeriod_.size()) {
+        if (!nvo.empty()) {
             nvp.push_back(nvo[0]);
             auto tmp = nvo[0];
             nvo.erase(nvo.begin(), nvo.begin()+1);
