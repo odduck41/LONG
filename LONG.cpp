@@ -181,6 +181,37 @@ LONG LONG::operator+ (LONG other) const {
     return sum;
 }
 
+LONG LONG::operator* (LONG other) const { //1000000000000000000 1000000000000000000000
+    LONG ans;
+    auto first = this->Integer_;
+    auto second = other.Integer_;
+    if (first.size() > second.size()) {
+        swap(first, second);
+    }
+    for (auto i = 0ull; i < second.size(); ++i) {
+        long long carry = 0;
+        LONG now;
+        for (auto j = 0ull; j < first.size(); ++j) {
+            long long tmp = second[i] * first[j] + carry;
+            LONG ee(std::to_string(tmp%ans.Base_), ans.Base_);
+            for (auto k = 0ull; k < j; ++k) {
+                ee.Integer_.insert(ee.Integer_.begin(), 0);
+            }
+            now = now + ee;
+            carry = tmp/ans.Base_;
+
+        }
+        if(carry) {
+            now.Integer_.push_back(carry);
+        }
+        for (auto k = 0ull; k < i; ++k) {
+            now.Integer_.insert(now.Integer_.begin(), 0);
+        }
+        ans = ans + now;
+    }
+    return ans;
+}
+
 std::string operator* (const std::string& s, int n) {
     std::string ans;
     for (int i = 0; i < n; ++i) {
