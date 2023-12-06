@@ -120,22 +120,43 @@ LONG LONG::operator+ (LONG other) const {
         }
     }
     //Period part
-    sum.Period_.resize(lcd(this->Period_.size(), other.Period_.size()));
-    for (auto i = lcd(this->Period_.size(), other.Period_.size()) / other.Period_.size(); i > 0; --i) {
-        for (auto &j: bvo) {
-            other.Period_.push_back(j);
+    unsigned long long val = 0;
+    if (!this->Period_.empty() && !other.Period_.empty()) {
+        val = lcd(this->Period_.size(), other.Period_.size());
+    } else if (!this->Period_.empty()) {
+        val = this->Period_.size();
+    } else if (!other.Period_.empty()){
+        val = other.Period_.size();
+    }
+    sum.Period_.resize(val);
+    if (!other.Period_.empty()) {
+        for (auto i = val / other.Period_.size(); i > 0; --i) {
+            for (auto &j: bvo) {
+                other.Period_.push_back(j);
+            }
         }
     }
-    for (auto i = lcd(this->Period_.size(), other.Period_.size()) / this->Period_.size(); i > 0; --i) {
-        for (auto &j: this->Period_) {
-            nvo.push_back(j);
+    if (!this->Period_.empty()) {
+        for (auto i = val / this->Period_.size(); i > 0; --i) {
+            for (auto &j: this->Period_) {
+                nvo.push_back(j);
+            }
         }
     }
     for (long long i = sum.Period_.size() - 1; i >= 0; --i) {
-        sum.Period_[i] = ((int) nvo[i] + (int) other.Period_[i] + carry) % Base_;
-        carry = ((int) nvo[i] + (int) other.Period_[i] + carry) / Base_;
+        int a = 0, b = 0;
+        if (!nvo.empty()) {
+            a = nvo[i];
+        }
+        if (!other.Period_.empty()) {
+            b = other.Period_[i];
+        }
+        sum.Period_[i] = (a + b + carry) % Base_;
+        carry = (a + b + carry) / Base_;
     }
-    sum.Period_[sum.Period_.size() - 1] += carry;
+    if (!sum.Period_.empty()) {
+        sum.Period_[sum.Period_.size() - 1] += carry;
+    }
     //PrePeriod part
     for (long long i = sum.PrePeriod_.size() - 1; i >= 0; --i) {
         sum.PrePeriod_[i] = ((int) nvp[i] + (int) other.PrePeriod_[i] + carry) % Base_;

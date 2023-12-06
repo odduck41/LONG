@@ -3,8 +3,8 @@
 
 
 int main() {
-    LONG a("1.1(01)", 2);
-    LONG b("0.0(10)", 2);
+    LONG a("6.0(1)", 10);
+    LONG b(" 5", 10);
     LONG c = a + b;
     std::cout << c;
 }
