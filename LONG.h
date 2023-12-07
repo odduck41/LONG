@@ -5,9 +5,10 @@
 class LONG {
   public:
     LONG() = default;
-    explicit LONG(const long long&);
-    explicit LONG(const double&);
-    explicit LONG(const std::string&);
+    LONG(const long long&);
+    LONG(const double&);
+    LONG(const int&);
+    LONG(const std::string&);
     LONG (const LONG&);
     LONG operator*=(const LONG&);
     LONG operator+=(const LONG&);
