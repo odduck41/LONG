@@ -3,6 +3,7 @@
 
 
 int main() {
-    LONG a("1.1", 2);
-    std::cout << a.to_10();
+    LONG a("0.1", 10);
+    LONG b("10", 10);
+    std::cout << (a*b);
 }

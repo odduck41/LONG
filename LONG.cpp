@@ -188,6 +188,13 @@ LONG LONG::operator* (const LONG& other) const {
     if (first.size() > second.size()) {
         swap(first, second);
     }
+    ans.PrePeriod_.resize(this->PrePeriod_.size() + other.PrePeriod_.size());
+    for (auto &i: this->PrePeriod_) {
+        first.insert(first.begin(), i);
+    }
+    for (auto &i: other.PrePeriod_) {
+        second.insert(second.begin(), i);
+    }
     for (auto i = 0ull; i < second.size(); ++i) {
         long long carry = 0;
         LONG now;
@@ -209,15 +216,22 @@ LONG LONG::operator* (const LONG& other) const {
         }
         ans = ans + now;
     }
+    for (auto i = 0ull; i < ans.PrePeriod_.size(); ++i) {
+        ans.PrePeriod_[i] = ans.Integer_.front();
+        ans.Integer_.erase(ans.Integer_.begin(), ans.Integer_.begin() + 1);
+    }
     return ans;
 }
 
 LONG LONG::operator^ (long long n) const {
-    LONG ans("1");
-    for (int i = 0; i < n; ++i) {
-        ans = ans * (*this);
+    if (n == 1) {
+        return *this;
     }
-    return ans;
+    if (n % 2 == 0) {
+        return (*this * (*this)) ^ (n/2);
+    } else {
+        return (*this * (*this ^ (n - 1)));
+    }
 }
 
 bool LONG::operator==(const LONG& other) const {
@@ -253,21 +267,17 @@ LONG LONG::to_10() const{
     for (long long i = 0; i < this->Integer_.size(); ++i) {
         ans = ans + LONG(std::to_string(this->Integer_[i])) * (LONG(std::to_string(Base_)) ^ i);
     }
-    LONG k;
-    k.Integer_ = this->PrePeriod_;
-    for (long long i = 0; i < this->PrePeriod_.size(); ++i) {
-        auto val = (LONG(std::to_string(k.Integer_[i], 2))/(LONG(std::to_string(this->Base_)) ^ (-1-i)));
-        //ans.PrePeriod_.push_back(val);
-    }
     return ans;
 }
 
 
 LONG LONG::operator/ (const LONG& other) const {
     LONG ans("0", this->Base_);
-    for (;(ans * other) < *this;) {
+
+    /*for (;(ans * other) < *this;) {
             ans = ans + LONG("1", this->Base_);
-    }
+    }*/
+
     return ans;
 }
 
