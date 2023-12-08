@@ -8,22 +8,27 @@ void LONG::Parse_(const std::string& from) {
 };
 
 // Initializing
-LONG::LONG(const std::string & val) {
+LONG::LONG(const std::string & val, int Base): Base_(Base) {
     Parse_(val);
 }
 
-LONG::LONG(const double & val) {
+LONG::LONG(const double & val, int Base): Base_(Base) {
     Parse_(val);
 }
 
-LONG::LONG(const long long& val) {
+LONG::LONG(const long long& val, int Base): Base_(Base) {
     Parse_(val);
 }
 
-LONG::LONG(const int& val) : LONG(static_cast<long long> (val)) {};
+LONG::LONG(const int& val, int Base): LONG(static_cast<long long> (val), Base) {};
 
+// Coping
 LONG::LONG(const LONG & other) {
-    ;
+    this->z = other.z;
+    this->Base_ = other.Base_;
+    this->Integer_ = other.Integer_;
+    this->PrePeriod_ = other.PrePeriod_;
+    this->Period_ = other.Period_;
 }
 
 // Arithmetic operators

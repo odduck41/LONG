@@ -5,10 +5,11 @@
 class LONG {
   public:
     LONG() = default;
-    LONG(const long long&);
-    LONG(const double&);
-    LONG(const int&);
-    LONG(const std::string&);
+    LONG(const long long&, int = 10);
+    LONG(const double&, int = 10);
+    LONG(const int&, int = 10);
+    LONG(const std::string&, int = 10);
+
     LONG (const LONG&);
     LONG operator*=(const LONG&);
     LONG operator+=(const LONG&);
@@ -20,6 +21,7 @@ class LONG {
     LONG operator/(const LONG&) const;
     short operator<=>(const LONG&) const;
   private:
+    int Base_ = 10;
     bool z = true; // true is +, false is -;
     void Parse_(const long long&);
     void Parse_(const double&);

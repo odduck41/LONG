@@ -3,5 +3,6 @@
 using namespace std;
 
 int main() {
-
+    LONG a;
+    a += 2;
 }
