@@ -4,7 +4,7 @@
 using namespace std;
 
 int main() {
-    LONG a = "115.167(900)"; //
-    LONG b = "16.06(2677)"; //
-    cout << (a += b);
+    LONG a = "-115.167(900)"; //
+    LONG b = "-115.167(901)"; //
+    cout << (b == a);
 }
