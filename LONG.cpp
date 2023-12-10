@@ -107,7 +107,7 @@ std::ostream& operator<< (std::ostream& out, LONG var) {
 
 LONG LONG::operator+= (LONG other) {
     if (!other.z) {
-        //return *this -= other;
+        return *this -= other;
     }
 
 }
