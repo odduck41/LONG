@@ -8,7 +8,7 @@ class LONG {
   public:
     friend std::ostream& operator<<(std::ostream& out, LONG th);
     LONG() = default;
-    explicit LONG(const char* , int = 10);
+    explicit LONG(const char*, int = 10);
     //LONG(const long long&);
     //LONG(const double&);
     //LONG(const int&);

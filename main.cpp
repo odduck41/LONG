@@ -4,7 +4,6 @@
 using namespace std;
 
 int main() {
-    std::string e = "3242135123";
-    LONG a = e.c_str();
+    LONG a = "42389852345623478562897523407534218123456899690468349641649164913694";
     cout << a;
 }
