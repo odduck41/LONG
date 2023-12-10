@@ -104,10 +104,103 @@ std::ostream& operator<< (std::ostream& out, LONG var) {
     return out;
 }
 
-
 LONG LONG::operator+= (LONG other) {
-    if (!other.z) {
+    if (!this->z) {
+        this->z = true;
+        return other -= *this;
+    } else if (!other.z) {
+        other.z = true;
         return *this -= other;
     }
+    int carry = 0;
 
+    // Reducing the PrePeriods to one length
+    while (this->PrePeriod_.size() < other.PrePeriod_.size()) {
+        if (this->Period_.empty()) {
+            this->PrePeriod_.emplace_back(0);
+        } else {
+            this->PrePeriod_.emplace_back(this->Period_.front());
+            this->Period_.erase(this->Period_.begin());
+            this->Period_.emplace_back(this->PrePeriod_.back());
+        }
+    }
+    while (other.PrePeriod_.size() < this->PrePeriod_.size()) {
+        if (other.Period_.empty()) {
+            other.PrePeriod_.emplace_back(0);
+        } else {
+            other.PrePeriod_.emplace_back(other.Period_.front());
+            other.Period_.erase(other.Period_.begin());
+            other.Period_.emplace_back(other.PrePeriod_.back());
+        }
+    }
+
+    // Reducing the Periods to one length;
+    auto NewLen = 0ull;
+    if (!this->Period_.empty() && !other.Period_.empty()) {
+        NewLen = lcd(this->Period_.size(), other.Period_.size());
+    } else if (!this->Period_.empty()){
+        NewLen = this->Period_.size();
+    } else if (!other.Period_.empty()) {
+        NewLen = other.Period_.size();
+    }
+    auto ThisPeriodCopy = this->Period_;
+    auto OtherPeriodCopy = other.Period_;
+    if (ThisPeriodCopy.empty()) {
+        ThisPeriodCopy.emplace_back(0);
+    }
+    if (OtherPeriodCopy.empty()) {
+        OtherPeriodCopy.emplace_back(0);
+    }
+    while (this->Period_.size() < NewLen) {
+        for (auto &i: ThisPeriodCopy) {
+            this->Period_.emplace_back(i);
+        }
+    }
+    while (other.Period_.size() < NewLen) {
+        for (auto &i: OtherPeriodCopy) {
+            other.Period_.emplace_back(i);
+        }
+    }
+
+    // Period addition
+    for (auto i = 0ull; i < NewLen; ++i) {
+        auto now = this->Period_[NewLen - i - 1] + other.Period_[NewLen - i - 1] + carry;
+        this->Period_[NewLen - i - 1] = (now) % Base_;
+        carry = now / (Base_);
+    }
+    if (!this->Period_.empty()) {
+        this->Period_[NewLen - 1] += carry;
+    }
+
+    // PrePeriod addition
+    for (auto i = 0ull; i < this->PrePeriod_.size(); ++i) {
+        auto now = (int)this->PrePeriod_[this->PrePeriod_.size() - i - 1]
+                + (int)other.PrePeriod_[this->PrePeriod_.size() - i - 1] + carry;
+        this->PrePeriod_[this->PrePeriod_.size() - i - 1] = now % Base_;
+        carry = now / (Base_);
+    }
+    // Integer addition
+    for (int i = 0; i < std::max(other.Integer_.size(), this->Integer_.size()); ++i) {
+        if (i < other.Integer_.size() && i < this->Integer_.size()) {
+            auto now = (int)this->Integer_[i] + (int)other.Integer_[i] + carry;
+            this->Integer_[i] = now % Base_;
+            carry = now / Base_;
+        } else if (i < other.Integer_.size()) {
+            auto now = (int)other.Integer_[i] + carry;
+            this->Integer_.emplace_back(now % Base_);
+            carry = now / Base_;
+        } else {
+            auto now = (int)this->Integer_[i] + carry;
+            this->Integer_[i] = now % Base_;
+            carry = now / Base_;
+        }
+    }
+    if (carry > 0) {
+        this->Integer_.emplace_back(carry);
+    }
+    return *this;
+}
+
+LONG LONG::operator-=(const LONG &) {
+    return LONG();
 }
