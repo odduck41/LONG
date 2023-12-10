@@ -22,7 +22,6 @@ class LONG {
     //LONG operator/(const LONG&) const;
     bool operator> (LONG);
     bool operator== (LONG);
-    bool operator!= (const LONG&);
     bool operator< (const LONG&);
     bool operator>= (const LONG&);
     bool operator<= (const LONG&);

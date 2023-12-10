@@ -266,10 +266,6 @@ bool LONG::operator== (LONG other) {
     &&(this->Period_ == other.Period_);
 }
 
-bool LONG::operator!= (const LONG& other) {
-    return !(*this == other);
-}
-
 bool LONG::operator< (const LONG& other) {
     return *this != other && !(*this > other);
 }
