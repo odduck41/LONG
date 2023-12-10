@@ -16,7 +16,7 @@ class LONG {
     //LONG (const LONG&);
     //LONG operator*=(const LONG&);
     LONG operator+=(LONG);
-    LONG operator-=(const LONG&);
+    //LONG operator-=(const LONG&);
     //LONG operator/=(const LONG&);
     //LONG operator*(const LONG&) const;
     //LONG operator+(const LONG&) const;

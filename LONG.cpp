@@ -62,6 +62,9 @@ LONG::LONG(const char* Val) : Base_(10) {
 }
 
 std::ostream& operator<< (std::ostream& out, LONG var) {
+    if (!var.z) {
+        out << "-";
+    }
     for (auto i = 0ull; i < var.Integer_.size(); ++i) {
         if ((int)var.Integer_[var.Integer_.size() - i - 1] > 9) {
             out << '[';
@@ -104,7 +107,7 @@ std::ostream& operator<< (std::ostream& out, LONG var) {
 
 LONG LONG::operator+= (LONG other) {
     if (!other.z) {
-        return *this -= other;
+        //return *this -= other;
     }
 
 }
