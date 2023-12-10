@@ -230,6 +230,10 @@ LONG LONG::operator-= (LONG other) {
         return *this = (other -= *this);
     }
     this->ToOneView(other);
+    if (other > *this) {
+        return *this = -(other -= *this);
+    }
+
 }
 
 bool LONG::operator> (LONG other){
