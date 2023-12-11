@@ -264,12 +264,14 @@ LONG LONG::operator-= (LONG other) {
             }
             if (!borrow) {
                 for (auto j = 0ull; j < Integer_.size(); ++j) {
-                    if (this->Integer_[j] > other.Integer_[j]) {
+                    if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
                         this->Integer_[j] -= 1;
-                        borrow = true;
                         break;
-                    } else {
+                    } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
                         this->Integer_[j] += (Base_ - 1);
+                    } else {
+                        this->Integer_[j] -= 1;
+                        break;
                     }
                 }
                 for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
@@ -311,15 +313,17 @@ LONG LONG::operator-= (LONG other) {
             }
             if (!borrow) {
                 for (auto j = 0ull; j < Integer_.size(); ++j) {
-                    if (this->Integer_[j] > other.Integer_[j]) {
+                    if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
                         this->Integer_[j] -= 1;
-                        borrow = true;
                         break;
-                    } else {
+                    } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
                         this->Integer_[j] += (Base_ - 1);
+                    } else {
+                        this->Integer_[j] -= 1;
+                        break;
                     }
                 }
-                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                for (auto j = i + 1; j < PrePeriod_.size(); ++j) {
                     this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
                 }
             }
@@ -333,11 +337,14 @@ LONG LONG::operator-= (LONG other) {
             this->Integer_[i] -= other.Integer_[i];
         } else {
             for (auto j = i + 1; j < Integer_.size(); ++j) {
-                if (this->Integer_[j] > other.Integer_[j]) {
+                if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
                     this->Integer_[j] -= 1;
                     break;
-                } else {
+                } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
                     this->Integer_[j] += (Base_ - 1);
+                } else {
+                    this->Integer_[j] -= 1;
+                    break;
                 }
             }
             this->Integer_[i] += Base_;
@@ -363,6 +370,8 @@ bool LONG::operator> (LONG other){
     this->ToOneView(other);
     if (this->Integer_.size() > other.Integer_.size()) {
         return this->z;
+    } else if (this->Integer_.size() < other.Integer_.size()){
+        return !this->z;
     }
     for (auto i = 0ull; i < this->Integer_.size(); ++i) {
         if (this->Integer_[Integer_.size() - i - 1] > other.Integer_[Integer_.size() - i - 1]) {
