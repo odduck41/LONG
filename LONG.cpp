@@ -226,14 +226,132 @@ LONG LONG::operator-= (LONG other) {
         return *this += (-other);
     } else if (!this->z && other.z) {
         return *this = -(*this += other);
-    } else {
-        return *this = (other -= *this);
+    } else if (!this->z && !other.z){
+        return *this = (-other -= *this);
     }
     this->ToOneView(other);
     if (other > *this) {
         return *this = -(other -= *this);
     }
+    // Period part
+    for (auto i = 0ull; i < Period_.size(); ++i) {
+        if (this->Period_[Period_.size() - i - 1] >= other.Period_[Period_.size() - i - 1]) {
+            this->Period_[Period_.size() - i - 1] -= other.Period_[Period_.size() - i - 1];
+        } else {
+            bool borrow = false;
+            for (auto j = i + 1; j < Period_.size(); ++j) {
+                if (this->Period_[Period_.size() - j - 1] > other.Period_[Period_.size() - j - 1]) {
+                    this->Period_[Period_.size() - j - 1] -= 1;
+                    borrow = true;
+                    break;
+                } else {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                    if (this->PrePeriod_[PrePeriod_.size() - j - 1] > other.PrePeriod_[PrePeriod_.size() - j - 1]) {
+                        this->PrePeriod_[PrePeriod_.size() - j - 1] -= 1;
+                        borrow = true;
+                        break;
+                    } else {
+                        this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                    }
+                }
+                for (auto j = i + 1; j < Period_.size(); ++j) {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < Integer_.size(); ++j) {
+                    if (this->Integer_[j] > other.Integer_[j]) {
+                        this->Integer_[j] -= 1;
+                        borrow = true;
+                        break;
+                    } else {
+                        this->Integer_[j] += (Base_ - 1);
+                    }
+                }
+                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+                for (auto j = i + 1; j < Period_.size(); ++j) {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            this->Period_[Period_.size() - i - 1] += Base_;
+            this->Period_[Period_.size() - i - 1] -= other.Period_[Period_.size() - i - 1];
+            if (i == Period_.size() - 1) {
+                for (auto j = 0ull; j < Period_.size(); ++j) {
+                    if (Period_[Period_.size() - j - 1] == 0) {
+                        Period_[Period_.size() - j - 1] = Base_ - 1;
+                    } else {
+                        Period_[Period_.size() - j - 1] -= 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
+    // PrePeriod part
+    for (auto i = 0ull; i < PrePeriod_.size(); ++i) {
+        if (this->PrePeriod_[PrePeriod_.size() - i - 1] >= other.PrePeriod_[PrePeriod_.size() - i - 1]) {
+            this->PrePeriod_[PrePeriod_.size() - i - 1] -= other.PrePeriod_[PrePeriod_.size() - i - 1];
+        } else {
+            bool borrow = false;
+            for (auto j = i + 1; j < PrePeriod_.size(); ++j) {
+                if (this->PrePeriod_[PrePeriod_.size() - j - 1] > other.PrePeriod_[PrePeriod_.size() - j - 1]) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] -= 1;
+                    borrow = true;
+                    break;
+                } else {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < Integer_.size(); ++j) {
+                    if (this->Integer_[j] > other.Integer_[j]) {
+                        this->Integer_[j] -= 1;
+                        borrow = true;
+                        break;
+                    } else {
+                        this->Integer_[j] += (Base_ - 1);
+                    }
+                }
+                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            this->PrePeriod_[PrePeriod_.size() - i - 1] += Base_;
+            this->PrePeriod_[PrePeriod_.size() - i - 1] -= other.PrePeriod_[PrePeriod_.size() - i - 1];
+        }
+    }
+    // Integer part
+    for (auto i = 0ull; i < other.Integer_.size(); ++i) {
+        if (this->Integer_[i] >= other.Integer_[i]) {
+            this->Integer_[i] -= other.Integer_[i];
+        } else {
+            for (auto j = i + 1; j < Integer_.size(); ++j) {
+                if (this->Integer_[j] > other.Integer_[j]) {
+                    this->Integer_[j] -= 1;
+                    break;
+                } else {
+                    this->Integer_[j] += (Base_ - 1);
+                }
+            }
+            this->Integer_[i] += Base_;
+            this->Integer_[i] -= other.Integer_[i];
+        }
+    }
+    for (auto i = 0ull; i < Integer_.size(); ++i) {
+        if (Integer_[Integer_.size() - i - 1] == 0) {
+            Integer_.erase(Integer_.end() - i - 1);
+        } else {
+            break;
+        }
+    }
+    return *this;
 }
 
 bool LONG::operator> (LONG other){
@@ -248,17 +366,17 @@ bool LONG::operator> (LONG other){
     }
     for (auto i = 0ull; i < this->Integer_.size(); ++i) {
         if (this->Integer_[i] < other.Integer_[i]) {
-            return this->z;
+            return !this->z;
         }
     }
     for (auto i = 0ull; i < this->PrePeriod_.size(); ++i) {
         if (this->PrePeriod_[this->PrePeriod_.size() - i - 1] < other.PrePeriod_[this->PrePeriod_.size() - i - 1]) {
-            return this->z;
+            return !this->z;
         }
     }
     for (auto i = 0ull; i < this->Period_.size(); ++i) {
         if (this->Period_[this->Period_.size() - i - 1] < other.Period_[this->Period_.size() - i - 1]) {
-            return this->z;
+            return !this->z;
         }
     }
     return false;
