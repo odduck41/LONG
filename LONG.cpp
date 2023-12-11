@@ -9,6 +9,7 @@ unsigned long long gcd(unsigned long long a, unsigned long long b) {
 unsigned long long lcd(unsigned long long a, unsigned long long b) {
     return std::max(a, b)/gcd(a, b) * std::min(a, b);
 }
+
 void LONG::ToOneView(LONG &other) {
     // Reducing the PrePeriods to one length
     while (this->PrePeriod_.size() < other.PrePeriod_.size()) {
@@ -361,6 +362,37 @@ LONG LONG::operator-= (LONG other) {
     return *this;
 }
 
+LONG LONG::lbl (LONG other) {
+    LONG ans("0", Base_);
+    auto this_ = this->Integer_;
+    auto other_ = other.Integer_;
+    if (this_.size() < other_.size()) {
+        swap(this_, other_);
+    }
+    for (auto i = 0ull; i < other_.size(); ++i) {
+        LONG now("0", Base_);
+        int carry = 0;
+        for (auto j = 0ull; j < this_.size(); ++j) {
+            int tmp = this_[j] * other_[i] + carry;
+            LONG foo(std::to_string(tmp % Base_).c_str(), Base_);
+            for (auto k = 0ull; k < j; ++k) {
+                foo.Integer_.insert(foo.Integer_.begin(), 0);
+            }
+            now += foo;
+            carry = tmp / Base_;
+        }
+        while (carry) {
+            now.Integer_.emplace_back(carry % Base_);
+            carry /= Base_;
+        }
+        for (auto j = 0ull; j < i; ++j) {
+            now.Integer_.insert(now.Integer_.begin(), 0);
+        }
+        ans += now;
+    }
+    return ans;
+}
+
 bool LONG::operator> (LONG other){
     if (this->z && !other.z) {
         return true;
@@ -419,6 +451,7 @@ LONG LONG::operator+(const LONG & other) const {
     LONG copy = *this;
     return copy += other;
 }
+
 LONG LONG::operator-(const LONG & other) const {
     LONG copy = *this;
     return copy -= other;
