@@ -227,7 +227,7 @@ LONG LONG::operator-= (LONG other) {
     } else if (!this->z && other.z) {
         return *this = -(*this += other);
     } else if (!this->z && !other.z){
-        return *this = (-other -= *this);
+        return *this = (-other -= (-*this));
     }
     this->ToOneView(other);
     if (other > *this) {
@@ -365,17 +365,23 @@ bool LONG::operator> (LONG other){
         return this->z;
     }
     for (auto i = 0ull; i < this->Integer_.size(); ++i) {
-        if (this->Integer_[i] < other.Integer_[i]) {
+        if (this->Integer_[Integer_.size() - i - 1] > other.Integer_[Integer_.size() - i - 1]) {
+            return this->z;
+        } else if (this->Integer_[Integer_.size() - i - 1] < other.Integer_[Integer_.size() - i - 1]) {
             return !this->z;
         }
     }
     for (auto i = 0ull; i < this->PrePeriod_.size(); ++i) {
-        if (this->PrePeriod_[this->PrePeriod_.size() - i - 1] < other.PrePeriod_[this->PrePeriod_.size() - i - 1]) {
+        if (this->PrePeriod_[i] > other.PrePeriod_[i]) {
+            return this->z;
+        } else if (this->PrePeriod_[i] < other.PrePeriod_[i]) {
             return !this->z;
         }
     }
     for (auto i = 0ull; i < this->Period_.size(); ++i) {
-        if (this->Period_[this->Period_.size() - i - 1] < other.Period_[this->Period_.size() - i - 1]) {
+        if (this->Period_[i] > other.Period_[i]) {
+            return this->z;
+        } else if (this->Period_[i] < other.Period_[i]) {
             return !this->z;
         }
     }
