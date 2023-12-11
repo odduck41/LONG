@@ -225,7 +225,7 @@ LONG LONG::operator-= (LONG other) {
     } else if (this->z && !other.z) {
         return *this += (-other);
     } else if (!this->z && other.z) {
-        return *this = -(*this += other);
+        return *this = -((-*this) += other);
     } else if (!this->z && !other.z){
         return *this = (-other -= (-*this));
     }
@@ -413,4 +413,13 @@ bool LONG::operator>=(const LONG& other) {
 
 bool LONG::operator<=(const LONG& other) {
     return (*this == other) || (*this < other);
+}
+
+LONG LONG::operator+(const LONG & other) const {
+    LONG copy = *this;
+    return copy += other;
+}
+LONG LONG::operator-(const LONG & other) const {
+    LONG copy = *this;
+    return copy -= other;
 }
