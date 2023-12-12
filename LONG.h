@@ -3,17 +3,13 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include "Fraction.h"
 
 unsigned long long gcd(unsigned long long, unsigned long long);
 unsigned long long lcd(unsigned long long, unsigned long long);
 
-class LONG;
-
 class LONG {
   public:
     friend std::ostream& operator<<(std::ostream& out, LONG th);
-    friend Fraction::Fraction(LONG);
     LONG() = default;
     explicit LONG(const char*, int = 10);
     LONG(const char*);
