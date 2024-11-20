@@ -5,4 +5,5 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_executable(LONG main.cpp
         LONG.cpp
-        LONG.h)
+        LONG.h
+)

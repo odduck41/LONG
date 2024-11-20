@@ -1,79 +1,96 @@
 #include "LONG.h"
 
+#include <utility>
+
 unsigned long long gcd(unsigned long long a, unsigned long long b) {
     return b ? gcd(b, a%b) : a;
 }
+
 unsigned long long lcd(unsigned long long a, unsigned long long b) {
     return std::max(a, b)/gcd(a, b) * std::min(a, b);
 }
 
-std::ostream& operator<<(std::ostream& out, LONG th) {
-    for (long long i = th.Integer_.size() - 1; i >= 0; --i) {
-        if ((int)th.Integer_[i] > 9) {
-            out << '[';
-        }
-        out << (int)th.Integer_[i];
-        if ((int)th.Integer_[i] > 9) {
-            out << ']';
-        }
-    }
-    if (!th.PrePeriod_.empty() || !th.Period_.empty()) {
-        out << '.';
-    }
-    for (auto &i: th.PrePeriod_) {
-        if (i > 9) {
-            out << '[';
-        }
-        out << (int)i;
-        if (i > 9) {
-            out << ']';
+void LONG::ToOneView(LONG &other) {
+    // Reducing the PrePeriods to one length
+    while (this->PrePeriod_.size() < other.PrePeriod_.size()) {
+        if (this->Period_.empty()) {
+            this->PrePeriod_.emplace_back(0);
+        } else {
+            this->PrePeriod_.emplace_back(this->Period_.front());
+            this->Period_.erase(this->Period_.begin());
+            this->Period_.emplace_back(this->PrePeriod_.back());
         }
     }
-    if (!th.Period_.empty()) {
-        out << '(';
-    }
-    for (auto &i: th.Period_) {
-        if (i > 9) {
-            out << '[';
-        }
-        out << (int)i;
-        if (i > 9) {
-            out << ']';
+    while (other.PrePeriod_.size() < this->PrePeriod_.size()) {
+        if (other.Period_.empty()) {
+            other.PrePeriod_.emplace_back(0);
+        } else {
+            other.PrePeriod_.emplace_back(other.Period_.front());
+            other.Period_.erase(other.Period_.begin());
+            other.Period_.emplace_back(other.PrePeriod_.back());
         }
     }
-    if (!th.Period_.empty()) {
-        out << ')';
+
+    // Reducing the Periods to one length;
+    auto NewLen = 0ull;
+    if (!this->Period_.empty() && !other.Period_.empty()) {
+        NewLen = lcd(this->Period_.size(), other.Period_.size());
+    } else if (!this->Period_.empty()){
+        NewLen = this->Period_.size();
+    } else if (!other.Period_.empty()) {
+        NewLen = other.Period_.size();
     }
-    return out;
+    auto ThisPeriodCopy = this->Period_;
+    auto OtherPeriodCopy = other.Period_;
+    if (ThisPeriodCopy.empty()) {
+        ThisPeriodCopy.emplace_back(0);
+    }
+    if (OtherPeriodCopy.empty()) {
+        OtherPeriodCopy.emplace_back(0);
+    }
+    while (this->Period_.size() < NewLen) {
+        for (auto &i: ThisPeriodCopy) {
+            this->Period_.emplace_back(i);
+        }
+    }
+    while (other.Period_.size() < NewLen) {
+        for (auto &i: OtherPeriodCopy) {
+            other.Period_.emplace_back(i);
+        }
+    }
+
 }
 
-void LONG::Parse(const std::string& Val) {
+void LONG::Parse_(const char* Val) {
     bool pre = false;
     bool per = false;
-    for (int i = 0; Val[i] != '\0'; ++i) {
+    z = (Val[0] != '-');
+    for (int i = 0 + (int)!z; Val[i] != '\0'; ++i) {
         int now = 0;
         if (Val[i] == '[') {
             ++i;
             for (;Val[i] != ']'; ++i) {
                 now = now * 10 + (Val[i] - '0');
             }
-        } else if (65 <= Val[i] && Val[i] <= 90) {
+        } else if ('A' <= Val[i] && Val[i] <= 'Z') {
             now = Val[i] - 55;
-        } else if (97 <= Val[i] && Val[i] <= 122) {
+        } else if ('a' <= Val[i] && Val[i] <= 'z') {
             now = Val[i] - 87;
         } else if ('0' <= Val[i] && Val[i] <= '9') {
             now = Val[i] - '0';
         } else if (Val[i] == ']') {
             continue;
         } else if (Val[i] == '.') {
-                pre = true;
-                continue;
+            pre = true;
+            continue;
         } else if (Val[i] == '(') {
             pre = false;
             per = true;
             continue;
         } else if (Val[i] == ')') {
             break;
+        } else {
+            throw std::pair<const char*, int> {"Symbol error", i};
         }
         if (now >= Base_) {
             throw std::pair<const char*, int>{"The number is greater than or equal to the base", i};
@@ -89,212 +106,353 @@ void LONG::Parse(const std::string& Val) {
     std::reverse(Integer_.begin(), Integer_.end());
 }
 
-LONG LONG::operator+ (LONG other) const {
-    LONG sum;
-    sum.Integer_.resize(std::max(other.Integer_.size(), this->Integer_.size()));
-    sum.PrePeriod_.resize(std::max(other.PrePeriod_.size(), this->PrePeriod_.size()));
-    sum.Base_ = this->Base_;
-    int carry = 0;
-    auto bvo = other.Period_;
-    auto nvo = this->Period_;
-    auto nvp = this->PrePeriod_;
-    //Pre PrePeriod part
-    while (this->PrePeriod_.size() > other.PrePeriod_.size()) {
-        if (!other.Period_.empty()) {
-            other.PrePeriod_.push_back(other.Period_[0]);
-            auto tmp = other.Period_[0];
-            other.Period_.erase(other.Period_.begin(), other.Period_.begin()+1);
-            other.Period_.push_back(tmp);
-        } else {
-            other.Period_.push_back(0);
-        }
-    }
-    while (nvp.size() < other.PrePeriod_.size()) {
-        if (!nvo.empty()) {
-            nvp.push_back(nvo[0]);
-            auto tmp = nvo[0];
-            nvo.erase(nvo.begin(), nvo.begin()+1);
-            nvo.push_back(tmp);
-        } else {
-            nvp.push_back(0);
-        }
-    }
-    //Period part
-    unsigned long long val = 0;
-    if (!this->Period_.empty() && !other.Period_.empty()) {
-        val = lcd(this->Period_.size(), other.Period_.size());
-    } else if (!this->Period_.empty()) {
-        val = this->Period_.size();
-    } else if (!other.Period_.empty()){
-        val = other.Period_.size();
-    }
-    sum.Period_.resize(val);
-    if (!other.Period_.empty()) {
-        for (auto i = val / other.Period_.size(); i > 0; --i) {
-            for (auto &j: bvo) {
-                other.Period_.push_back(j);
-            }
-        }
-    }
-    if (!this->Period_.empty()) {
-        for (auto i = val / this->Period_.size(); i > 0; --i) {
-            for (auto &j: this->Period_) {
-                nvo.push_back(j);
-            }
-        }
-    }
-    for (long long i = sum.Period_.size() - 1; i >= 0; --i) {
-        int a = 0, b = 0;
-        if (!nvo.empty()) {
-            a = nvo[i];
-        }
-        if (!other.Period_.empty()) {
-            b = other.Period_[i];
-        }
-        sum.Period_[i] = (a + b + carry) % Base_;
-        carry = (a + b + carry) / Base_;
-    }
-    if (!sum.Period_.empty()) {
-        sum.Period_[sum.Period_.size() - 1] += carry;
-    }
-    //PrePeriod part
-    for (long long i = sum.PrePeriod_.size() - 1; i >= 0; --i) {
-        sum.PrePeriod_[i] = ((int) nvp[i] + (int) other.PrePeriod_[i] + carry) % Base_;
-        carry = ((int) nvp[i] + (int) other.PrePeriod_[i] + carry) / Base_;
-    }
-    // Int part
-    for (int i = 0; i < std::max(other.Integer_.size(), this->Integer_.size()); ++i) {
-        if (i < other.Integer_.size() && i < this->Integer_.size()) {
-            sum.Integer_[i] = ((int)this->Integer_[i] + (int)other.Integer_[i] + carry) % Base_;
-            carry = ((int)this->Integer_[i] + (int)other.Integer_[i] + carry) / Base_;
-        } else if (i < other.Integer_.size()) {
-            sum.Integer_[i] = ((int)other.Integer_[i] + carry) % Base_;
-            carry = ((int)other.Integer_[i] + carry) / Base_;
-        } else {
-            sum.Integer_[i] = ((int)this->Integer_[i] + carry) % Base_;
-            carry = ((int)this->Integer_[i] + carry) / Base_;
-        }
-        if (carry > 0 && i + 1 == std::max(other.Integer_.size(), this->Integer_.size())) {
-            sum.Integer_.push_back(carry);
-        }
-    }
-    return sum;
+LONG::LONG(const char* Val, int Base) : Base_(Base) {
+    Parse_(Val);
 }
 
-LONG LONG::operator* (const LONG& other) const {
-    LONG ans;
-    auto first = this->Integer_;
-    auto second = other.Integer_;
-    if (first.size() > second.size()) {
-        swap(first, second);
-    }
-    ans.PrePeriod_.resize(this->PrePeriod_.size() + other.PrePeriod_.size());
-    for (auto &i: this->PrePeriod_) {
-        first.insert(first.begin(), i);
-    }
-    for (auto &i: other.PrePeriod_) {
-        second.insert(second.begin(), i);
-    }
-    for (auto i = 0ull; i < second.size(); ++i) {
-        long long carry = 0;
-        LONG now;
-        for (auto j = 0ull; j < first.size(); ++j) {
-            long long tmp = second[i] * first[j] + carry;
-            LONG ee(std::to_string(tmp%ans.Base_), ans.Base_);
-            for (auto k = 0ull; k < j; ++k) {
-                ee.Integer_.insert(ee.Integer_.begin(), 0);
-            }
-            now = now + ee;
-            carry = tmp/ans.Base_;
+LONG::LONG(const char* Val) : Base_(10) {
+    Parse_(Val);
+}
 
+std::ostream& operator<< (std::ostream& out, LONG var) {
+    if (!var.z) {
+        out << "-";
+    }
+    for (auto i = 0ull; i < var.Integer_.size(); ++i) {
+        if ((int)var.Integer_[var.Integer_.size() - i - 1] > 9) {
+            out << '[';
         }
-        if(carry) {
-            now.Integer_.push_back(carry);
+        out << (int)var.Integer_[var.Integer_.size() - i - 1];
+        if ((int)var.Integer_[var.Integer_.size() - i - 1] > 9) {
+            out << ']';
         }
-        for (auto k = 0ull; k < i; ++k) {
+    }
+    if (!var.PrePeriod_.empty() || !var.Period_.empty()) {
+        out << '.';
+    }
+    for (auto &i: var.PrePeriod_) {
+        if (i > 9) {
+            out << '[';
+        }
+        out << (int)i;
+        if (i > 9) {
+            out << ']';
+        }
+    }
+    if (!var.Period_.empty()) {
+        out << '(';
+    }
+    for (auto &i: var.Period_) {
+        if (i > 9) {
+            out << '[';
+        }
+        out << (int)i;
+        if (i > 9) {
+            out << ']';
+        }
+    }
+    if (!var.Period_.empty()) {
+        out << ')';
+    }
+    return out;
+}
+
+LONG LONG::operator-() const{
+    LONG copy = *this;
+    copy.z = !(this->z);
+    return copy;
+}
+
+LONG LONG::operator+= (LONG other) {
+    if (!this->z && !other.z) {
+        ;
+    } else if (!this->z) {
+        return *this = (other -= (-(*this)));
+    } else if (!other.z) {
+        return *this -= (-other);
+    }
+    int carry = 0;
+    this->ToOneView(other);
+    auto NewLen = 0ull;
+    if (!this->Period_.empty() && !other.Period_.empty()) {
+        NewLen = lcd(this->Period_.size(), other.Period_.size());
+    } else if (!this->Period_.empty()){
+        NewLen = this->Period_.size();
+    } else if (!other.Period_.empty()) {
+        NewLen = other.Period_.size();
+    }
+   // Period addition
+    for (auto i = 0ull; i < NewLen; ++i) {
+        auto now = this->Period_[NewLen - i - 1] + other.Period_[NewLen - i - 1] + carry;
+        this->Period_[NewLen - i - 1] = (now) % Base_;
+        carry = now / (Base_);
+    }
+    if (!this->Period_.empty()) {
+        this->Period_[NewLen - 1] += carry;
+    }
+
+    // PrePeriod addition
+    for (auto i = 0ull; i < this->PrePeriod_.size(); ++i) {
+        auto now = (int)this->PrePeriod_[this->PrePeriod_.size() - i - 1]
+                + (int)other.PrePeriod_[this->PrePeriod_.size() - i - 1] + carry;
+        this->PrePeriod_[this->PrePeriod_.size() - i - 1] = now % Base_;
+        carry = now / (Base_);
+    }
+    // Integer addition
+    for (auto i = 0ull; i < std::max(other.Integer_.size(), this->Integer_.size()); ++i) {
+        if (i < other.Integer_.size() && i < this->Integer_.size()) {
+            auto now = (int)this->Integer_[i] + (int)other.Integer_[i] + carry;
+            this->Integer_[i] = now % Base_;
+            carry = now / Base_;
+        } else if (i < other.Integer_.size()) {
+            auto now = (int)other.Integer_[i] + carry;
+            this->Integer_.emplace_back(now % Base_);
+            carry = now / Base_;
+        } else {
+            auto now = (int)this->Integer_[i] + carry;
+            this->Integer_[i] = now % Base_;
+            carry = now / Base_;
+        }
+    }
+    if (carry > 0) {
+        this->Integer_.emplace_back(carry);
+    }
+    return *this;
+}
+
+LONG LONG::operator-= (LONG other) {
+    if (this->z && other.z) {
+        ;
+    } else if (this->z && !other.z) {
+        return *this += (-other);
+    } else if (!this->z && other.z) {
+        return *this = -((-*this) += other);
+    } else if (!this->z && !other.z){
+        return *this = (-other -= (-*this));
+    }
+    this->ToOneView(other);
+    if (other > *this) {
+        return *this = -(other -= *this);
+    }
+    // Period part
+    for (auto i = 0ull; i < Period_.size(); ++i) {
+        if (this->Period_[Period_.size() - i - 1] >= other.Period_[Period_.size() - i - 1]) {
+            this->Period_[Period_.size() - i - 1] -= other.Period_[Period_.size() - i - 1];
+        } else {
+            bool borrow = false;
+            for (auto j = i + 1; j < Period_.size(); ++j) {
+                if (this->Period_[Period_.size() - j - 1] > other.Period_[Period_.size() - j - 1]) {
+                    this->Period_[Period_.size() - j - 1] -= 1;
+                    borrow = true;
+                    break;
+                } else {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                    if (this->PrePeriod_[PrePeriod_.size() - j - 1] > other.PrePeriod_[PrePeriod_.size() - j - 1]) {
+                        this->PrePeriod_[PrePeriod_.size() - j - 1] -= 1;
+                        borrow = true;
+                        break;
+                    } else {
+                        this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                    }
+                }
+                for (auto j = i + 1; j < Period_.size(); ++j) {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < Integer_.size(); ++j) {
+                    if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
+                        this->Integer_[j] -= 1;
+                        break;
+                    } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
+                        this->Integer_[j] += (Base_ - 1);
+                    } else {
+                        this->Integer_[j] -= 1;
+                        break;
+                    }
+                }
+                for (auto j = 0ull; j < PrePeriod_.size(); ++j) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+                for (auto j = i + 1; j < Period_.size(); ++j) {
+                    this->Period_[Period_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            this->Period_[Period_.size() - i - 1] += Base_;
+            this->Period_[Period_.size() - i - 1] -= other.Period_[Period_.size() - i - 1];
+            if (i == Period_.size() - 1) {
+                for (auto j = 0ull; j < Period_.size(); ++j) {
+                    if (Period_[Period_.size() - j - 1] == 0) {
+                        Period_[Period_.size() - j - 1] = Base_ - 1;
+                    } else {
+                        Period_[Period_.size() - j - 1] -= 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // PrePeriod part
+    for (auto i = 0ull; i < PrePeriod_.size(); ++i) {
+        if (this->PrePeriod_[PrePeriod_.size() - i - 1] >= other.PrePeriod_[PrePeriod_.size() - i - 1]) {
+            this->PrePeriod_[PrePeriod_.size() - i - 1] -= other.PrePeriod_[PrePeriod_.size() - i - 1];
+        } else {
+            bool borrow = false;
+            for (auto j = i + 1; j < PrePeriod_.size(); ++j) {
+                if (this->PrePeriod_[PrePeriod_.size() - j - 1] > other.PrePeriod_[PrePeriod_.size() - j - 1]) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] -= 1;
+                    borrow = true;
+                    break;
+                } else {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            if (!borrow) {
+                for (auto j = 0ull; j < Integer_.size(); ++j) {
+                    if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
+                        this->Integer_[j] -= 1;
+                        break;
+                    } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
+                        this->Integer_[j] += (Base_ - 1);
+                    } else {
+                        this->Integer_[j] -= 1;
+                        break;
+                    }
+                }
+                for (auto j = i + 1; j < PrePeriod_.size(); ++j) {
+                    this->PrePeriod_[PrePeriod_.size() - j - 1] += (Base_ - 1);
+                }
+            }
+            this->PrePeriod_[PrePeriod_.size() - i - 1] += Base_;
+            this->PrePeriod_[PrePeriod_.size() - i - 1] -= other.PrePeriod_[PrePeriod_.size() - i - 1];
+        }
+    }
+    // Integer part
+    for (auto i = 0ull; i < other.Integer_.size(); ++i) {
+        if (this->Integer_[i] >= other.Integer_[i]) {
+            this->Integer_[i] -= other.Integer_[i];
+        } else {
+            for (auto j = i + 1; j < Integer_.size(); ++j) {
+                if (j < other.Integer_.size() && this->Integer_[j] > other.Integer_[j]) {
+                    this->Integer_[j] -= 1;
+                    break;
+                } else if (j < other.Integer_.size() && this->Integer_[j] < other.Integer_[j]){
+                    this->Integer_[j] += (Base_ - 1);
+                } else {
+                    this->Integer_[j] -= 1;
+                    break;
+                }
+            }
+            this->Integer_[i] += Base_;
+            this->Integer_[i] -= other.Integer_[i];
+        }
+    }
+    for (auto i = 0ull; i < Integer_.size(); ++i) {
+        if (Integer_[Integer_.size() - i - 1] == 0) {
+            Integer_.erase(Integer_.end() - i - 1);
+        } else {
+            break;
+        }
+    }
+    return *this;
+}
+
+LONG LONG::lbl (LONG other) {
+    LONG ans("0", Base_);
+    auto this_ = this->Integer_;
+    auto other_ = other.Integer_;
+    if (this_.size() < other_.size()) {
+        swap(this_, other_);
+    }
+    for (auto i = 0ull; i < other_.size(); ++i) {
+        LONG now("0", Base_);
+        int carry = 0;
+        for (auto j = 0ull; j < this_.size(); ++j) {
+            int tmp = this_[j] * other_[i] + carry;
+            LONG foo(std::to_string(tmp % Base_).c_str(), Base_);
+            for (auto k = 0ull; k < j; ++k) {
+                foo.Integer_.insert(foo.Integer_.begin(), 0);
+            }
+            now += foo;
+            carry = tmp / Base_;
+        }
+        while (carry) {
+            now.Integer_.emplace_back(carry % Base_);
+            carry /= Base_;
+        }
+        for (auto j = 0ull; j < i; ++j) {
             now.Integer_.insert(now.Integer_.begin(), 0);
         }
-        ans = ans + now;
-    }
-    for (auto i = 0ull; i < ans.PrePeriod_.size(); ++i) {
-        ans.PrePeriod_[i] = ans.Integer_.front();
-        ans.Integer_.erase(ans.Integer_.begin(), ans.Integer_.begin() + 1);
+        ans += now;
     }
     return ans;
 }
 
-LONG LONG::operator^ (long long n) const {
-    if (n == 1) {
-        return *this;
-    }
-    if (n % 2 == 0) {
-        return (*this * (*this)) ^ (n/2);
-    } else {
-        return (*this * (*this ^ (n - 1)));
-    }
-}
-
-bool LONG::operator==(const LONG& other) const {
-    return other.Integer_ == this->Integer_;
-}
-
-bool LONG::operator>(LONG other) const{
-    auto th = this->Integer_;
-    auto oth = other.Integer_;
-    if (th.size() > oth.size()) {
+bool LONG::operator> (LONG other){
+    if (this->z && !other.z) {
         return true;
-    } else if (th.size() < oth.size()) {
+    } else if (!this->z && other.z) {
         return false;
-    } else {
-        for (int i = th.size() - 1; i >= 0; --i) {
-            if (th[i] > oth[i]) {
-                return true;
-            } else if (th[i] < oth[i]) {
-                return false;
-            }
+    }
+    this->ToOneView(other);
+    if (this->Integer_.size() > other.Integer_.size()) {
+        return this->z;
+    } else if (this->Integer_.size() < other.Integer_.size()){
+        return !this->z;
+    }
+    for (auto i = 0ull; i < this->Integer_.size(); ++i) {
+        if (this->Integer_[Integer_.size() - i - 1] > other.Integer_[Integer_.size() - i - 1]) {
+            return this->z;
+        } else if (this->Integer_[Integer_.size() - i - 1] < other.Integer_[Integer_.size() - i - 1]) {
+            return !this->z;
+        }
+    }
+    for (auto i = 0ull; i < this->PrePeriod_.size(); ++i) {
+        if (this->PrePeriod_[i] > other.PrePeriod_[i]) {
+            return this->z;
+        } else if (this->PrePeriod_[i] < other.PrePeriod_[i]) {
+            return !this->z;
+        }
+    }
+    for (auto i = 0ull; i < this->Period_.size(); ++i) {
+        if (this->Period_[i] > other.Period_[i]) {
+            return this->z;
+        } else if (this->Period_[i] < other.Period_[i]) {
+            return !this->z;
         }
     }
     return false;
 }
 
-bool LONG::operator<(LONG oth) const {
-    return !(*this == oth) && !(*this > oth);
+bool LONG::operator== (LONG other) {
+    this->ToOneView(other);
+    return (this->z == other.z) && (this->Integer_ == other.Integer_) && (this->PrePeriod_ == other.PrePeriod_)
+    &&(this->Period_ == other.Period_);
 }
 
-LONG LONG::to_10() const{
-    LONG ans;
-    ans.Base_ = 10;
-    for (long long i = 0; i < this->Integer_.size(); ++i) {
-        ans = ans + LONG(std::to_string(this->Integer_[i])) * (LONG(std::to_string(Base_)) ^ i);
-    }
-    return ans;
+bool LONG::operator< (const LONG& other) {
+    return *this != other && !(*this > other);
 }
 
-
-LONG LONG::operator/ (const LONG& other) const {
-    LONG ans("0", this->Base_);
-
-    /*for (;(ans * other) < *this;) {
-            ans = ans + LONG("1", this->Base_);
-    }*/
-
-    return ans;
+bool LONG::operator>=(const LONG& other) {
+    return (*this == other) || (*this > other);
 }
 
-std::string operator* (const std::string& s, int n) {
-    std::string ans;
-    for (int i = 0; i < n; ++i) {
-        ans += s;
-    }
-    return ans;
+bool LONG::operator<=(const LONG& other) {
+    return (*this == other) || (*this < other);
 }
 
-LONG::LONG(const std::string& Val, int Base) : Base_(Base) {
-    try {
-        Parse(Val);
-    } catch (std::pair<const char*, int> a) {
-        std::cout << a.first << '\n' << "Base: " << Base_ << '\n' << "Number: " << Val << '\n'
-        << "Here:   " << (std::string)" " * (a.second) << '^' << '\n';
-    }
+LONG LONG::operator+(const LONG & other) const {
+    LONG copy = *this;
+    return copy += other;
 }
 
+LONG LONG::operator-(const LONG & other) const {
+    LONG copy = *this;
+    return copy -= other;
+}
